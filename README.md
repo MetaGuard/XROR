@@ -83,9 +83,35 @@ with open('./sample.xror', 'wb') as f:
 
 Open and read a basic XROR file:
 ```
-with open('./data/tilt/sample.xror', 'rb') as f:
+from xror import XROR
+import json
+
+xror_file_path = r'./data/tilt/sample.xror'
+
+# custom function：convert an XROR object to a JSON serializable format (a dictionary)
+def serialize_xror(obj):
+    if isinstance(obj, dict):
+        return {k: serialize_xror(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [serialize_xror(i) for i in obj]
+    elif hasattr(obj, "__dict__"):  # If it is a custom object, take its attributes
+        return serialize_xror(obj.__dict__)
+    else:
+        return obj
+
+# Open and read a XROR file
+with open(xror_file_path, 'rb') as f:
     file = f.read()
+
+# unpack XROR file
 xror = XROR.unpack(file)
+
+# convert XROR to JSON format
+serialized_data = serialize_xror(xror)
+
+# stored as JSON file, and can be directly opened by a standard BSON reader, which is convenient to check the internal attributes.
+with open(r'./data/tilt/sample_xror.json', 'w', encoding="utf-8") as file:
+    json.dump(serialized_data, file, indent=4, ensure_ascii=False)
 ```
 
 Convert a BeatLeader .bsor file to XROR:
